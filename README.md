@@ -6,7 +6,7 @@ This application was developed during the NLW Experts event by Rocketseat using 
 
 After cloning the repository, navigate to the project folder and execute the following commands:
 
-We recommend installing Node Version Manager (NVM):
+I recommend installing Node Version Manager (NVM):
 
 ```
   nvm use
