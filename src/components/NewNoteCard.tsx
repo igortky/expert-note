@@ -1,7 +1,66 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import {X} from "lucide-react"
+import { ChangeEvent, FormEvent, useState } from 'react'
+import {toast} from 'sonner'
 
-export function NewNoteCard() {
+interface NewNoteCardProps {
+  onNoteCreated: (content: string) => void
+}
+
+export function NewNoteCard({onNoteCreated}: NewNoteCardProps ) {
+  const [shouldShowDefaultText, setShouldShowDefaultText] = useState(true)
+  const [content, setContent] = useState('')
+  const [isRecordind, setIsRercoding] = useState(false)
+
+  function handleStartEditor() {
+    setShouldShowDefaultText(false)
+  }
+
+  function handleContentChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    const textValue = event.target.value
+    setContent(textValue)
+    if (textValue === '') {
+      setShouldShowDefaultText(true)
+    }
+  }
+
+  function handleSaveNote(event: FormEvent) {
+    event.preventDefault()
+    if(content === '') { return }
+    onNoteCreated(content)
+    setContent('');
+    setShouldShowDefaultText(true);
+    toast.success('Nota criata com sucesso')
+  }
+
+  function handleStartRecordind() {
+    setIsRercoding(true)
+
+    const isSpeechRecognitionAPIAvailable = 'SpeechRecognition' in window
+      || 'webkitSpeechRecognition' in window
+
+   if (!isSpeechRecognitionAPIAvailable) {
+    alert('Navegador não compoatível com API de gravacão')
+    return
+   }
+
+   const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition
+
+   const speechRecognition = new SpeechRecognitionAPI()
+
+   speechRecognition.lang = 'pt-BR'
+   speechRecognition.continuous = true
+   speechRecognition.maxAlternatives = 1
+   speechRecognition.interimResults = true
+  }
+
+
+
+  function handleStopRecordind() {
+    setIsRercoding(false)
+  }
+
+
   return (
     <Dialog.Root>
        <Dialog.Trigger className="rounded-md flex flex-col bg-slate-700 text-left p-5 gap-3 hover:ring-2 outline-none hover:ring-slate-600 focus-visible:ring-2 focus-visible:ring-lime-400">
@@ -17,22 +76,48 @@ export function NewNoteCard() {
           <Dialog.Close className="absolute right-0 top-0 bg-slate-800 p-1.5 text-slate-400 hover:text-slate-100">
             <X className="size-5"/>
           </Dialog.Close>
-          <div className="flex flex-1 flex-col gap-3 p-5">
-            <span className="text-sm font-medium text-slate-300">
-              Adicionar nota
-            </span>
+          <form className="flex-1 flex flex-col">
+            <div className="flex flex-1 flex-col gap-3 p-5">
+              <span className="text-sm font-medium text-slate-300">
+                Adicionar nota
+              </span>
+              {shouldShowDefaultText ?(
+                <p className="text-sm leading-6 text-slate-400">
+                Comece <button type='button' onClick={handleStartRecordind} className="font-medium text-lime-400 hover:underline">gravando uma nota</button> em áudio ou se preferir <button type='button' onClick={handleStartEditor} className="font-medium text-lime-400 hover:underline">utilize apenas texto</button>.
+              </p>
+              ) : (
+                <textarea
+                autoFocus
+                value={content}
+                className="text-sm leading-6 text-slate-400 bg-transparent resize-none flex-1 outline-none"
+                onChange={handleContentChange}
+                />
+              ) }
 
-            <p className="text-sm leading-6 text-slate-400">
-              Comece <button className="font-medium text-lime-400 hover:underline">gravando uma nota</button> em áudio ou se preferir <button className="font-medium text-lime-400 hover:underline">utilize apenas texto</button>.
-            </p>
-          </div>
+            </div>
 
-         <button
-          type="button"
-          className="w-full py-4 bg-lime-400 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
-          >
-            Salvar nota
-         </button>
+            {isRecordind ? (
+              <button
+                type="button"
+                onClick={handleStopRecordind}
+                className="w-full flex items-center justify-center gap-2 py-4 bg-slate-900 text-center text-sm text-slate-300 outline-none font-medium hover:text-slate-100"
+              >
+                <div  className="size-3 rounded-full bg-red-500 animate-pulse"/>
+                Gravando (clique p/ interromper)
+              </button>
+            )
+            :
+            (
+            <button
+            type="button"
+            onClick={handleSaveNote}
+            className="w-full py-4 bg-lime-400 text-center text-sm text-lime-950 outline-none font-medium hover:bg-lime-500"
+            >
+              Salvar nota
+            </button>
+            )
+            }
+         </form>
         </Dialog.Content>
       </Dialog.Overlay>
     </Dialog.Portal>
